@@ -14,6 +14,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: |
+          npm install gray-matter
+
       - name: Get PR files and author id
         id: pr_files
         uses: actions/github-script@v6
