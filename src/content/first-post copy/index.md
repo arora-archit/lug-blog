@@ -1,9 +1,11 @@
 ---
-title: 'First post'
-author: 'Tux'
-description: 'Lorem ipsum dolor sit amet'
-pubDate: 'Jul 08 2022'
-heroImage: './blog-placeholder-3.jpg'
+title: First post
+author: Tux
+description: Lorem ipsum dolor sit amet
+pubDate: Jul 08 2022
+heroImage: ./blog-placeholder-3.jpg
+authorImage: 'https://avatars.githubusercontent.com/u/176489846'
+updatedDate: Feb 01 2026
 ---
 
 # Lorem Ipsum
