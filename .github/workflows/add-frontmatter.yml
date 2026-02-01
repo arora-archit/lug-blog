@@ -1,0 +1,52 @@
+name: Add frontmatter
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  update-frontmatter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get PR files and author id
+        id: pr_files
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            if (!pr) return { paths: [], author_id: null };
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            const paths = files.map(f => f.filename).filter(p => p.startsWith('src/content/'));
+            return { paths, author_id: pr.user.id };
+
+      - name: Run update-frontmatter for changed/added files
+        if: ${{ steps.pr_files.outputs.result != '' }}
+        env:
+          PR_RESULT: ${{ steps.pr_files.outputs.result }}
+        run: |
+          node -e '
+          const r = JSON.parse(process.env.PR_RESULT || "{}");
+          const paths = r.paths || [];
+          const author = r.author_id;
+          if (!author || paths.length === 0) {
+            console.log("No content files changed or author missing; skipping.");
+            process.exit(0);
+          }
+          const { spawnSync } = require("child_process");
+          const url = `https://avatars.githubusercontent.com/u/${author}`;
+          for (const p of paths) {
+            console.log("Processing", p);
+            const res = spawnSync("node", ["scripts/update-frontmatter.cjs", p, url], { stdio: "inherit" });
+            if (res.status !== 0) process.exit(res.status);
+          }
+          '
