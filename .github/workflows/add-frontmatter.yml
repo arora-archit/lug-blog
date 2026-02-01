@@ -83,14 +83,9 @@ jobs:
           '
 
       - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if git status --porcelain | grep .; then
-            git add src/content/
-            git commit -m "chore: auto-update frontmatter"
-            git push
-          else
-            echo "No changes to commit"
-          fi
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'src'
+          message: 'chore: auto-update frontmatter'
+          default_author: github_actions
+          push: true
