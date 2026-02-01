@@ -3,6 +3,9 @@ name: Add frontmatter
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - 'src/content/**.md'
+      - 'src/content/**.mdx'
   workflow_dispatch:
 
 permissions:
@@ -47,7 +50,9 @@ jobs:
 
             const paths = files
               .map(f => f.filename)
-              .filter(p => p.startsWith('src/content/'));
+              .filter(p => p.startsWith('src/content/')
+              && (p.endsWith('.md') || p.endsWith('.mdx'))
+              );
 
             return {
               paths,
