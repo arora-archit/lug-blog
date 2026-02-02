@@ -1,14 +1,10 @@
 name: Deploy to GitHub Pages
 
 on:
-  # Trigger the workflow every time you push to the `main` branch
-  # Using a different branch name? Replace `main` with your branch’s name
   push:
     branches: [ main ]
-  # Allows you to run this workflow manually from the Actions tab on GitHub.
   workflow_dispatch:
 
-# Allow this job to clone the repo and create a page deployment
 permissions:
   contents: read
   pages: write
@@ -17,48 +13,34 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: github-pages
+    env:
+      PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+      PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+
     steps:
-      - name: Checkout your repository using git
+      - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Validate environment variables
+      - name: Validate required environment variables
         run: |
           echo "Checking required environment variables..."
 
           if [[ -z "$PUBLIC_SUPABASE_URL" ]]; then
-            echo "❌ PUBLIC_SUPABASE_URL is MISSING!"
+            echo "❌ PUBLIC_SUPABASE_URL is missing!"
             exit 1
           else
             echo "✅ PUBLIC_SUPABASE_URL is set"
           fi
 
           if [[ -z "$PUBLIC_SUPABASE_ANON_KEY" ]]; then
-            echo "❌ PUBLIC_SUPABASE_ANON_KEY is MISSING!"
+            echo "❌ PUBLIC_SUPABASE_ANON_KEY is missing!"
             exit 1
           else
             echo "✅ PUBLIC_SUPABASE_ANON_KEY is set"
           fi
 
-          if [[ -z "$SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID" ]]; then
-            echo "⚠️  GOOGLE_CLIENT_ID is missing"
-          else
-            echo "✅ GOOGLE_CLIENT_ID is set"
-          fi
-
-          if [[ -z "$SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET" ]]; then
-            echo "⚠️  GOOGLE_CLIENT_SECRET is missing"
-          else
-            echo "✅ GOOGLE_CLIENT_SECRET is set"
-          fi
-          
-      - name: Install, build, and upload your site
+      - name: Install, build, and upload site
         uses: withastro/action@v5
-        env:
-          PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
-          PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
-          SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET }}
 
   deploy:
     needs: build
@@ -66,6 +48,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
