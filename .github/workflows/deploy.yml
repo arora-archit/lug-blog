@@ -17,10 +17,41 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: github-pages
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v5
 
+      - name: Validate environment variables
+        run: |
+          echo "Checking required environment variables..."
+
+          if [[ -z "$PUBLIC_SUPABASE_URL" ]]; then
+            echo "❌ PUBLIC_SUPABASE_URL is MISSING!"
+            exit 1
+          else
+            echo "✅ PUBLIC_SUPABASE_URL is set"
+          fi
+
+          if [[ -z "$PUBLIC_SUPABASE_ANON_KEY" ]]; then
+            echo "❌ PUBLIC_SUPABASE_ANON_KEY is MISSING!"
+            exit 1
+          else
+            echo "✅ PUBLIC_SUPABASE_ANON_KEY is set"
+          fi
+
+          if [[ -z "$SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID" ]]; then
+            echo "⚠️  GOOGLE_CLIENT_ID is missing"
+          else
+            echo "✅ GOOGLE_CLIENT_ID is set"
+          fi
+
+          if [[ -z "$SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET" ]]; then
+            echo "⚠️  GOOGLE_CLIENT_SECRET is missing"
+          else
+            echo "✅ GOOGLE_CLIENT_SECRET is set"
+          fi
+          
       - name: Install, build, and upload your site
         uses: withastro/action@v5
         env:
@@ -28,7 +59,6 @@ jobs:
           PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID }}
           SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET: ${{ secrets.SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET }}
-
 
   deploy:
     needs: build
