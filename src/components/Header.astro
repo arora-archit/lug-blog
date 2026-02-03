@@ -8,12 +8,17 @@ import { ClientRouter } from 'astro:transitions';
 		<img src="/luglogo.png" alt="logo">
 		<span>The LUGVITC Blog</span>
 	</a>
-	<nav>
-		<a href="/">cd ~</a>
-		<a href="https://www.lugvitc.net">cd /</a>
-		<a href="https://lugvitc.net/#/contact">ping port:80</a>
-	</nav>
-	<button id="toggle-theme" aria-label="Toggle theme"><img src="/Sun.svg" alt="Toggle theme"></button>
+
+	<button id="hamburger" class="hamburger" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+
+	<div id="menu" class="menu">
+		<nav>
+			<a href="/">cd ~</a>
+			<a href="https://www.lugvitc.net">cd /</a>
+			<a href="https://lugvitc.net/#/contact">ping lugvitc.net</a>
+		</nav>
+		<button id="toggle-theme" aria-label="Toggle theme"><img src="/Sun.svg" alt="Toggle theme"></button>
+	</div>
 </header>
 
 <script is:inline>
@@ -52,11 +57,6 @@ import { ClientRouter } from 'astro:transitions';
 		}, 0);
 	};
 
-	const theme = getTheme();
-	applyTheme(theme);
-	updateIcon(theme);
-	localStorage.setItem("theme", theme);
-
 	const attachToggle = () => {
 		const btn = document.getElementById("toggle-theme");
 		if (btn) {
@@ -64,19 +64,54 @@ import { ClientRouter } from 'astro:transitions';
 		}
 	};
 
-	
-	if (!window.themeListenersAttached) {
+	const attachMenuToggle = () => {
+		const ham = document.getElementById('hamburger');
+		const menu = document.getElementById('menu');
+		if (!ham || !menu) return;
+
+		ham.onclick = (e) => {
+			e.stopPropagation();
+			const opened = menu.classList.toggle('open');
+			ham.setAttribute('aria-expanded', opened ? 'true' : 'false');
+		};
+
+		menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+			menu.classList.remove('open');
+			ham.setAttribute('aria-expanded', 'false');
+		}));
+
+		document.addEventListener('click', (ev) => {
+			if (!menu.classList.contains('open')) return;
+			const target = ev.target;
+			if (!menu.contains(target) && target !== ham) {
+				menu.classList.remove('open');
+				ham.setAttribute('aria-expanded', 'false');
+			}
+		});
+	};
+
+	const theme = getTheme();
+	applyTheme(theme);
+	updateIcon(theme);
+	localStorage.setItem("theme", theme);
+
+	const initHeader = () => {
+		attachToggle();
+		attachMenuToggle();
+		applyTheme(getTheme());
+	};
+
+	if (!window.headerWidgetAttached) {
 		document.addEventListener("astro:after-swap", () => {
 			applyTheme(getTheme());
 			updateIcon(getTheme());
-	});
+		});
 
-	document.addEventListener("astro:page-load", () => {
-			attachToggle();
-			applyTheme(getTheme());
-	});
-	
-	window.themeListenersAttached = true;
+		document.addEventListener("astro:page-load", () => {
+			initHeader();
+		});
+
+		window.headerWidgetAttached = true;
 	}
 </script>
 
@@ -85,10 +120,11 @@ import { ClientRouter } from 'astro:transitions';
 		display:flex;
 		align-items: center;
 		gap: 2rem;
-		padding:0.1rem 0.5rem;
+		padding:0.1rem 0.5rem 0.5rem;
 		border-bottom:4px solid var(--header-border);
 		color: white;
 		background: var(--header-bg);
+		position: relative;
 	}
 
 	.logo {
@@ -113,31 +149,28 @@ import { ClientRouter } from 'astro:transitions';
 		box-shadow: 6px 6px var(--box-shadow);
 	}
 
-	nav {
-		width: auto;
-		display:flex;
-		gap:2rem;
+	.menu {
 		margin-left: auto;
+		display:flex;
+		align-items: center;
+		gap:1rem;
 	}
 
-	nav a {
+	.menu nav {
+		display:flex;
+		gap:2rem;
+	}
+
+	.menu nav a {
 		text-decoration:none;
 		color: inherit;
-		padding: 0.5rem 2.5rem;
+		padding: 0.5rem 1.5rem;
 		box-shadow: 6px 6px var(--box-shadow);
 	}
 
-	nav a:nth-child(1) {
-		background: var(--color-orange); 
-	}
-
-	nav a:nth-child(2) {
-		background: var(--color-blue); 
-	}
-
-	nav a:nth-child(3) {
-		background: var(--color-green); 
-	}
+	.menu nav a:nth-child(1) { background: var(--color-orange); }
+	.menu nav a:nth-child(2) { background: var(--color-blue); }
+	.menu nav a:nth-child(3) { background: var(--color-green); }
 
 	#toggle-theme {
 		display:flex;
@@ -152,21 +185,58 @@ import { ClientRouter } from 'astro:transitions';
 		cursor: pointer;
 	}
 
-	#toggle-theme img {
-		width: 32px;
-		height: 32px;
-	}
+	#toggle-theme img { width: 32px; height: 32px; }
 
-	header nav a,
+	header .menu nav a,
 	#toggle-theme {
-	transition:
-		transform 0.15s ease-out,
-		box-shadow 0.15s ease-out;
+		transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
 	}
 
-	header nav a:hover, #toggle-theme:hover {
+	header .menu nav a:hover, #toggle-theme:hover {
 		transform: translate(1px, 1px);
 		box-shadow: 4px 4px var(--box-shadow);
+	}
+
+	.hamburger {
+		display: none;
+		margin-left: auto;
+		background: var(--color-blue);
+		color: white;
+		border: none;
+		padding: 0.5rem 0.75rem;
+		font-size: 1.25rem;
+		cursor: pointer;
+		box-shadow: 6px 6px var(--box-shadow);
+	}
+
+	@media (max-width: 700px) {
+		header {
+			gap: 1rem;
+		}
+
+		.logo img { height: 56px; }
+
+		.hamburger { display: block; }
+
+		.menu { display: none; }
+
+		.menu.open {
+			display: flex;
+			position: absolute;
+			top: 100%;
+			right: 12px;
+			flex-direction: column;
+			gap: 0.5rem;
+			padding: 0.75rem;
+			background: var(--header-bg);
+			border: 4px solid var(--header-border);
+			z-index: 60;
+			min-width: 200px;
+		}
+
+		.menu nav { flex-direction: column; }
+		.menu nav a { padding: 0.5rem 1rem; }
+		#toggle-theme { margin-right: 0; }
 	}
 
 </style>
